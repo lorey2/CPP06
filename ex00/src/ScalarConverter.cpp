@@ -1,34 +1,174 @@
 /* ************************************************************************** */
-/*																			*/
-/*														:::		::::::::	 */
-/*	 ScalarConverter.cpp								:+:		:+:	:+:	 */
-/*													+:+ +:+		 +:+	 */
-/*	 By: lorey <lorey@student.42lausanne.ch>		+#+	+:+		 +#+		*/
-/*												+#+#+#+#+#+	 +#+			 */
-/*	 Created: 2025/06/11 21:09:11 by lorey			 #+#	#+#			 */
-/*	 Updated: 2025/06/12 01:09:42 by lorey			###	 LAUSANNE.ch		 */
-/*																			*/
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   ScalarConverter.cpp                                :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: lorey <lorey@student.42lausanne.ch>        +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/11/17 14:24:44 by lorey             #+#    #+#             */
+/*   Updated: 2025/11/17 14:24:48 by lorey            ###   LAUSANNE.ch       */
+/*                                                                            */
 /* ************************************************************************** */
 
 #include "ScalarConverter.hpp"
 #include <climits>
+#include <iomanip>
 #include <iostream>
 #include <cstdlib>
 #include <cerrno>
+#include <cmath>    // Required for floor
+
+#include <iostream>
+#include <string>
+#include <sstream> // Required for stringstream
+
+bool toChar(const std::string& input, char& out_char) {
+    if (input.empty()) {
+        return false;
+    }
+
+    // Case 1: Input is a single character.
+    if (input.length() == 1 && !isdigit(input[0])) {
+        out_char = input[0];
+        return true;
+    }
+
+    // Case 2: Input is a C++ character literal.
+    if (input.length() == 3 && input[0] == '\'' && input[2] == '\'') {
+        out_char = input[1];
+        return true;
+    }
+
+    // Case 3: Input is a number (int or float notation).
+    std::stringstream ss;
+    ss << input;
+    double double_val = 0.0;
+
+    if (ss >> double_val) {
+        char remaining_char = 0;
+        ss >> remaining_char;
+        if (ss.fail() || (remaining_char == 'f' && ss.eof())) {
+            if (double_val == floor(double_val)) { // Check for whole number
+                int int_val = static_cast<int>(double_val);
+                if (int_val >= 0 && int_val <= 127) { // Check ASCII range
+                    out_char = static_cast<char>(int_val);
+                    return true;
+                }
+            }
+        }
+    }
+    return false; // All conversion attempts failed.
+}
+
+// The printChar function now uses the helper function.
+void printChar(const std::string& input) {
+    char c = 0;
+    if (toChar(input, c)) {
+        if (std::isprint(static_cast<unsigned char>(c))) {
+            std::cout	<< "char: '"
+						<< c << "'"
+						<< std::endl;
+
+			std::cout 	<< "int: "
+						<< static_cast<int>(c)
+						<< std::endl;
+
+			std::cout	<< "float: "
+						<< std::fixed
+						<< std::setprecision(1)
+						<< static_cast<float>(c)
+						<< 'f'
+						<< std::endl;
+
+			std::cout	<< "double: "
+						<< std::setprecision(1)
+						<< static_cast<double>(c)
+						<< std::endl;
+        } else {
+            std::cout << "char: Non-printable" << std::endl;
+
+			std::cout 	<< "int: "
+						<< static_cast<int>(c)
+						<< std::endl;
+
+			std::cout	<< "float: "
+						<< std::fixed
+						<< std::setprecision(1)
+						<< static_cast<float>(c)
+						<< 'f'
+						<< std::endl;
+
+			std::cout	<< "double: "
+						<< std::setprecision(1)
+						<< static_cast<double>(c)
+						<< std::endl;
+		}
+    } else {
+        std::cout << "char: impossible" << std::endl;
+    }
+}
 
 void	ScalarConverter::convert(const std::string& input){
 	if (isChar(input))
-		std::cout << "char" << std::endl;
+		printChar(input);
 	else if (isInt(input))
 		std::cout << "int" << std::endl;
 	else if (isFloat(input))
 		std::cout << "float" << std::endl;
 	else if (isDouble(input))
 		std::cout << "double" << std::endl;
+	else
+		std::cout << "nothing" << std::endl;
 }
 
-bool ScalarConverter::isChar(const std::string& input){
-	return(input.size() == 1 || (input.size() == 3 && (input[0] == '\'' && input[2] == '\'')));
+
+bool ScalarConverter::isChar(const std::string& input) {
+    if (input.empty()) {
+        return false;
+    }
+
+    // Case 1: Input is a single, non-digit character (e.g., "a", "*")
+    if (input.length() == 1) {
+        return (true);
+    }
+
+    // Case 2: Input is a C++ character literal (e.g., "'a'", "'*'")
+    if (input.length() == 3 && input[0] == '\'' && input[2] == '\'') {
+        return std::isprint(static_cast<unsigned char>(input[1]));
+    }
+
+    // --- REVISED NUMERIC LOGIC ---
+    // Case 3: Input is a number (int or float notation) representing a printable char.
+    std::stringstream ss;
+    ss << input;
+    double double_val = 0.0;
+
+    // Step 1: Try to parse a double. If this fails, it's not a number.
+    if (ss >> double_val) {
+        // Step 2: Check what's left in the string. It should be empty or contain just 'f'.
+        char remaining_char = 0;
+        ss >> remaining_char; // Try to read one more character
+
+        // This condition is true if:
+        // - Nothing was left to read (ss.fail() is true), e.g., for "42" or "42.0"
+        // - OR a single 'f' was read and then nothing else was left (ss.eof()), e.g., for "42.0f"
+        if (ss.fail() || (remaining_char == 'f' && ss.eof())) {
+            
+            // Step 3: Check if the parsed double is a whole number.
+            // We do this by comparing it to its floor.
+            if (double_val == floor(double_val)) {
+
+                // Step 4: Check if the whole number is a printable ASCII character.
+                int int_val = static_cast<int>(double_val);
+                if (int_val >= 0 && int_val <= 127) {
+                    return (true);
+                }
+            }
+        }
+    }
+    // --- END OF REVISED LOGIC ---
+
+    return false;
 }
 
 bool ScalarConverter::isInt(const std::string& input) {
@@ -48,38 +188,6 @@ bool ScalarConverter::isInt(const std::string& input) {
     }
     return (value >= INT_MIN && value <= INT_MAX);
 }
-
-/* bool ScalarConverter::isFloat(const std::string& input){
-	std::size_t	i = 0;
-	bool isBfComa = false;
-	bool isAfComa = false;
-
-	while (i < input.size() && std::isspace(input[i]))
-		i++;
-	if (i == input.size())
-		return false;
-	if (input[i] == '+' || input[i] == '-')
-		i++;
-	if (i == input.size())
-		return false;
-	for (; i < input.size() && std::isdigit(input[i]); i++)
-		isBfComa = true;
-	if (i == input.size() && isBfComa)
-		return true;
-	if (input[i] == '.')
-		i++;
-	if (i == input.size() && isBfComa)
-		return true;
-	for (; i < input.size() && std::isdigit(input[i]); i++){
-		isAfComa = true;
-	}
-	if (i == input.size() && (isBfComa || isAfComa))
-		return true;
-	if (i == input.size() - 1 && (input[input.size() - 1] == 'F' || input[input.size() - 1] == 'f'))
-		if (isBfComa || isAfComa)
-			return true;
-	return false;
-} */
 
 bool ScalarConverter::isFloat(const std::string& input) {
     // A simple check to quickly discard clearly invalid strings
