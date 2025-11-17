@@ -1,4 +1,4 @@
-NAME			=	ex00
+NAME			=	identify
 
 SRC_DIR		=	./src/
 OBJ_DIR		=	obj/

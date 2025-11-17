@@ -1,4 +1,4 @@
-NAME			=	ex00
+NAME			=	serialize
 
 SRC_DIR		=	./src/
 OBJ_DIR		=	obj/

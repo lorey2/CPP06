@@ -6,26 +6,30 @@
 /*   By: lorey <lorey@student.42lausanne.ch>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/11 21:32:47 by lorey             #+#    #+#             */
-/*   Updated: 2025/06/11 21:47:35 by lorey            ###   LAUSANNE.ch       */
+/*   Updated: 2025/11/17 17:53:46 by lorey            ###   LAUSANNE.ch       */
 /*                                                                            */
 /* ************************************************************************** */
 
 
-#pragma once
+#ifndef SCALARCONVERTER_HPP
+#define SCALARCONVERTER_HPP
+
 #include <string>
+#include <iostream>
+#include <limits>
+#include <cstdlib>
 
-class ScalarConverter
-{
-	public:
-		static void convert(const std::string& input);
+class ScalarConverter {
 	private:
-		ScalarConverter(){};
-		~ScalarConverter(){};
-		ScalarConverter(const ScalarConverter &scalar_conv){ (void)scalar_conv; };
-		ScalarConverter& operator=(const ScalarConverter &scalar_conv){ (void)scalar_conv; return  (*this);};
+		// Orthodox Canonical Form is private to prevent instantiation
+		ScalarConverter();
+		ScalarConverter(const ScalarConverter &src);
+		ScalarConverter &operator=(const ScalarConverter &rhs);
+		~ScalarConverter();
 
-		static bool isChar(const std::string& input);
-		static bool isInt(const std::string& input);
-		static bool isFloat(const std::string& input);
-		static bool isDouble(const std::string& input);
+	public:
+		// The single static method required by the subject
+		static void convert(const std::string &input);
 };
+
+#endif
